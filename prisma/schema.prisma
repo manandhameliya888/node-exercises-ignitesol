@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model books_author {
+  id                 Int                  @id @default(autoincrement())
+  birth_year         Int?                 @db.SmallInt
+  death_year         Int?                 @db.SmallInt
+  name               String               @db.VarChar(128)
+  books_book_authors books_book_authors[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model books_book {
+  id                     Int                      @id @default(autoincrement())
+  download_count         Int?
+  gutenberg_id           Int                      @unique
+  media_type             String                   @db.VarChar(16)
+  title                  String?                  @db.VarChar(1024)
+  books_book_authors     books_book_authors[]
+  books_book_bookshelves books_book_bookshelves[]
+  books_book_languages   books_book_languages[]
+  books_book_subjects    books_book_subjects[]
+  books_format           books_format[]
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model books_book_authors {
+  id           Int          @id @default(autoincrement())
+  book_id      Int
+  author_id    Int
+  books_author books_author @relation(fields: [author_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "books_book_authors_author_id_984f1ab8_fk_books_author_id")
+  books_book   books_book   @relation(fields: [book_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "books_book_authors_book_id_ed3433e7_fk_books_book_id")
+
+  @@unique([book_id, author_id], map: "books_book_authors_book_id_8714badb_uniq")
+  @@index([book_id], map: "books_book_authors_0a4572cc")
+  @@index([author_id], map: "books_book_authors_4f331e2f")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model books_book_bookshelves {
+  id              Int             @id @default(autoincrement())
+  book_id         Int
+  bookshelf_id    Int
+  books_bookshelf books_bookshelf @relation(fields: [bookshelf_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "books_book_bookshel_bookshelf_id_80cc77c5_fk_books_bookshelf_id")
+  books_book      books_book      @relation(fields: [book_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "books_book_bookshelves_book_id_f820ff72_fk_books_book_id")
+
+  @@unique([book_id, bookshelf_id], map: "books_book_bookshelves_book_id_6016a70a_uniq")
+  @@index([book_id], map: "books_book_bookshelves_0a4572cc")
+  @@index([bookshelf_id], map: "books_book_bookshelves_40928700")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model books_book_languages {
+  id             Int            @id @default(autoincrement())
+  book_id        Int
+  language_id    Int
+  books_book     books_book     @relation(fields: [book_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "books_book_languages_book_id_e833b1f4_fk_books_book_id")
+  books_language books_language @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "books_book_languages_language_id_e9f60572_fk_books_language_id")
+
+  @@unique([book_id, language_id], map: "books_book_languages_book_id_554fdccb_uniq")
+  @@index([book_id], map: "books_book_languages_0a4572cc")
+  @@index([language_id], map: "books_book_languages_468679bd")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model books_book_subjects {
+  id            Int           @id @default(autoincrement())
+  book_id       Int
+  subject_id    Int
+  books_book    books_book    @relation(fields: [book_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "books_book_subjects_book_id_a578cff2_fk_books_book_id")
+  books_subject books_subject @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "books_book_subjects_subject_id_7445958f_fk_books_subject_id")
+
+  @@unique([book_id, subject_id], map: "books_book_subjects_book_id_74dcf64a_uniq")
+  @@index([book_id], map: "books_book_subjects_0a4572cc")
+  @@index([subject_id], map: "books_book_subjects_ffaba1d1")
+}
+
+model books_bookshelf {
+  id                     Int                      @id @default(autoincrement())
+  name                   String                   @unique @db.VarChar(64)
+  books_book_bookshelves books_book_bookshelves[]
+
+  @@index([name], map: "books_bookshelf_name_2642cad6_like")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model books_format {
+  id         Int        @id @default(autoincrement())
+  mime_type  String     @db.VarChar(32)
+  url        String     @db.VarChar(256)
+  book_id    Int
+  books_book books_book @relation(fields: [book_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "books_format_book_id_b948fa34_fk_books_book_id")
+
+  @@index([book_id], map: "books_format_0a4572cc")
+}
+
+model books_language {
+  id                   Int                    @id @default(autoincrement())
+  code                 String                 @unique @db.VarChar(4)
+  books_book_languages books_book_languages[]
+
+  @@index([code], map: "books_language_code_217c406c_like")
+}
+
+model books_subject {
+  id                  Int                   @id @default(autoincrement())
+  name                String                @db.VarChar(256)
+  books_book_subjects books_book_subjects[]
+}
